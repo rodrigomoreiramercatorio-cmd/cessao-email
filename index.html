@@ -53,7 +53,6 @@ button {
   white-space: pre-wrap;
   font-family: Verdana, Arial;
   font-size: 14px;
-  line-height: 1.5;
 }
 </style>
 </head>
@@ -67,14 +66,22 @@ button {
 <div class="bloco">
 <h3>Dados da Cessão</h3>
 
-<label>Nº Caso</label>
-<input id="numero" type="number">
+<div style="display:flex; gap:10px;">
+  <div style="width:120px;">
+    <label>Nº Caso</label>
+    <input id="numero" type="number" min="1" max="999">
+  </div>
+
+  <div style="flex:1;">
+    <label>Caso</label>
+    <input id="caso">
+  </div>
+</div>
 
 <label>Data da cessão</label>
 <input id="data" type="date">
 
-<label>Caso</label>
-<input id="caso">
+<div id="infoData" style="color:#555; margin-top:-10px;"></div>
 </div>
 
 <div class="bloco">
@@ -86,7 +93,7 @@ button {
 <label>CPF/CNPJ</label>
 <input id="cpf">
 
-<label>Tipo</label>
+<label>O que estamos pagando com a transação:</label>
 <select id="tipo">
 <option>Credor</option>
 <option>Honorário Contratual</option>
@@ -118,19 +125,22 @@ button {
 <div class="bloco">
 <h3>Recebedor</h3>
 
-<label><input type="checkbox" id="mesmo"> Mesmo do credor</label>
+<label>
+<input type="checkbox" id="mesmo" checked>
+ Mesmo do credor
+</label>
 
-<label>Nome</label>
+<label>Nome Completo de quem receberá o valor</label>
 <input id="recebedor">
 
-<label>CPF/CNPJ</label>
+<label>CPF/CNPJ de quem receberá o valor</label>
 <input id="cpf2">
 </div>
 
 <div class="bloco">
 <h3>Banco</h3>
 
-<input id="bancoCod" placeholder="Código">
+<input id="bancoCod" placeholder="Código do banco">
 <input id="bancoNome" placeholder="Nome do banco">
 <input id="agencia" placeholder="Agência">
 <input id="conta" placeholder="Conta">
@@ -173,30 +183,74 @@ function valor(v){
  return parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
 }
 
-function diaSemana(data){
- return new Date(data).toLocaleDateString('pt-BR',{weekday:'long'});
+function mascara(v){
+ v=v.replace(/\D/g,"");
+ if(v.length<=11){
+   return v.replace(/(\d{3})(\d)/,"$1.$2")
+           .replace(/(\d{3})(\d)/,"$1.$2")
+           .replace(/(\d{3})(\d{1,2})$/,"$1-$2");
+ } else {
+   return v.replace(/^(\d{2})(\d)/,"$1.$2")
+           .replace(/^(\d{2})\.(\d{3})(\d)/,"$1.$2.$3")
+           .replace(/\.(\d{3})(\d)/,".$1/$2")
+           .replace(/(\d{4})(\d)/,"$1-$2");
+ }
 }
 
-function atualizar(){
- let n = String(numero.value||"").padStart(3,'0');
- let d = data.value;
- if(!d) return;
+function diaInfo(d){
+ let dataObj=new Date(d);
+ let dia=dataObj.toLocaleDateString('pt-BR',{weekday:'long'});
+ let hoje=new Date().toISOString().split('T')[0];
 
- let ano = d.substring(0,4);
- let dBR = d.split("-").reverse().join("/");
- let dia = diaSemana(d);
+ let texto=`Data da cessão: ${d.split("-").reverse().join("/")} | ${dia}`;
 
- let caso = nome(casoInput.value||"");
- let credor = nome(credorInput.value||"");
-
- if(mesmo.checked){
-   recebedor.value = credor;
-   cpf2.value = cpf.value;
+ if(d===hoje){
+   texto=`Data da cessão: ${d.split("-").reverse().join("/")} | Hoje - ${dia}`;
  }
 
- let assunto = `${ano}.${n} - ${caso} - ${dBR}`;
+ if(dataObj.getDay()==0||dataObj.getDay()==6){
+   alert("⚠️ Data em fim de semana");
+ }
 
- let corpo = `Prezados, haverá uma cessão prevista para ${dia} dia ${dBR}.
+ return texto;
+}
+
+const bancos={
+ "033":"Banco Santander S.A.",
+ "001":"Banco do Brasil S.A.",
+ "104":"Caixa Econômica Federal",
+ "341":"Itaú Unibanco S.A.",
+ "237":"Bradesco S.A.",
+ "260":"Nu Pagamentos S.A."
+};
+
+bancoCod.oninput=()=>{ if(bancos[bancoCod.value]) bancoNome.value=bancos[bancoCod.value]; };
+
+function atualizar(){
+
+ let n=String(numero.value||"").padStart(3,'0');
+ let d=data.value;
+ if(!d) return;
+
+ infoData.innerText=diaInfo(d);
+
+ let ano=d.substring(0,4);
+ let dBR=d.split("-").reverse().join("/");
+
+ let caso=nome(casoInput.value||"");
+ let credor=nome(credorInput.value||"");
+
+ cpf.value=mascara(cpf.value);
+ cpf2.value=mascara(cpf2.value);
+
+ if(mesmo.checked){
+   recebedor.value=credor;
+   cpf2.value=cpf.value;
+ }
+
+ let assunto=`${ano}.${n} - ${caso} - ${dBR}`;
+
+ let corpo=`Prezados, haverá uma cessão prevista para ${diaInfo(d).split("|")[1].trim()} dia ${dBR}.
 Seguem os dados para que a programação seja realizada.
 
 
@@ -222,8 +276,8 @@ Pagamento Credor
 15. Tipo da chave Pix: ${tipoPix.value}
 16. Tirou Print dos dados para conferência no email: ${print.value}`;
 
- assuntoDiv.innerText = assunto;
- corpoDiv.innerText = corpo;
+ assuntoDiv.innerText=assunto;
+ corpoDiv.innerText=corpo;
 }
 
 function copiarAssunto(){navigator.clipboard.writeText(assuntoDiv.innerText);}
@@ -250,8 +304,10 @@ let tipoConta=document.getElementById("tipoConta");
 let pix=document.getElementById("pix");
 let tipoPix=document.getElementById("tipoPix");
 let print=document.getElementById("print");
+let tipo=document.getElementById("tipo");
 let assuntoDiv=document.getElementById("assunto");
 let corpoDiv=document.getElementById("corpo");
+let infoData=document.getElementById("infoData");
 
 window.onload=()=>{
  let hoje=new Date().toISOString().split('T')[0];
