@@ -5,68 +5,29 @@
 <title>Cessão Mercatório</title>
 
 <style>
-body {
-  font-family: Arial;
-  background: #f5f7fa;
-  padding: 20px;
-}
-
-.container {
-  max-width: 900px;
-  margin: auto;
-  background: white;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-}
-
-h2 { text-align: center; }
-
-.bloco { margin-top: 20px; }
-
-label { font-weight: bold; font-size: 13px; }
-
+body { font-family: Arial; background:#f5f7fa; padding:20px; }
+.container { max-width:900px; margin:auto; background:white; padding:25px; border-radius:10px; }
+h2 { text-align:center; }
+.bloco { margin-top:18px; }
+label { font-size:12px; font-weight:bold; }
 input, select {
-  width: 100%;
-  padding: 8px;
-  margin-top: 3px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  font-size: 13px;
+  width:100%; padding:7px; margin-top:3px; margin-bottom:8px;
+  border-radius:5px; border:1px solid #ccc; font-size:12px;
 }
-
-.linha {
-  display:flex;
-  gap:10px;
-}
-
-.small { width:120px; }
-
+.linha { display:flex; gap:10px; align-items:end; }
+.small { width:110px; }
 button {
-  padding: 10px;
-  margin-top: 10px;
-  width: 100%;
-  background: #002060;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
+  padding:10px; width:100%; background:#002060; color:white;
+  border:none; border-radius:6px; cursor:pointer; margin-top:8px;
 }
-
 .output {
-  background: #f1f1f1;
-  padding: 15px;
-  border-radius: 6px;
-  white-space: pre-wrap;
-  font-family: Verdana;
-  font-size: 14px;
+  background:#f1f1f1; padding:12px; border-radius:6px;
+  font-family:Verdana; font-size:14px; white-space:pre-wrap;
 }
 </style>
 </head>
 
 <body>
-
 <div class="container">
 
 <h2>Cessão</h2>
@@ -79,7 +40,6 @@ button {
     <label>Nº Caso</label>
     <input id="numero" type="number" min="1" max="999">
   </div>
-
   <div>
     <label>Caso</label>
     <input id="caso">
@@ -91,7 +51,6 @@ button {
     <label>Data</label>
     <input id="data" type="date">
   </div>
-
   <div>
     <label>Dia</label>
     <input id="dia" disabled>
@@ -137,15 +96,12 @@ button {
 <div class="linha">
   <div>
     <label>Hora</label>
-    <select id="hora">
-      <option value=""></option>
-    </select>
+    <select id="hora"><option></option></select>
   </div>
-
   <div>
     <label>Min</label>
     <select id="min">
-      <option value=""></option>
+      <option></option>
       <option>00</option>
       <option>15</option>
       <option>30</option>
@@ -209,15 +165,16 @@ button {
 
 <script>
 
-// criar horas
+// HORAS
 for(let i=5;i<=23;i++){
  let h=i.toString().padStart(2,'0');
- hora.innerHTML += `<option>${h}</option>`;
+ document.getElementById("hora").innerHTML += `<option>${h}</option>`;
 }
 
+// FUNÇÕES
 function nome(n){
  return n.toLowerCase().trim().split(" ")
- .map(p=>["da","de","do","das","dos"].includes(p)?p:p[0]?.toUpperCase()+p.slice(1))
+ .map(p=>["da","de","do","das","dos"].includes(p)?p:p.charAt(0).toUpperCase()+p.slice(1))
  .join(" ");
 }
 
@@ -248,42 +205,54 @@ const bancos={
  "260":"Nu Pagamentos S.A."
 };
 
+// DATA + DIA
+let ultimoDia = "";
+
 function atualizar(){
 
  let d=data.value;
  if(!d) return;
 
- let dataObj=new Date(d);
- let diaSemana=dataObj.toLocaleDateString('pt-BR',{weekday:'long'});
- dia.value=diaSemana.charAt(0).toUpperCase()+diaSemana.slice(1);
+ let obj=new Date(d);
+ let diaSemana=obj.toLocaleDateString('pt-BR',{weekday:'long'});
+ diaSemana=diaSemana.charAt(0).toUpperCase()+diaSemana.slice(1);
 
- if(dataObj.getDay()==0||dataObj.getDay()==6){
-   alert("⚠️ Data em fim de semana");
+ let hoje=new Date().toISOString().split('T')[0];
+
+ if(d===hoje){
+   dia.value=`Hoje - ${diaSemana}`;
+ } else {
+   dia.value=diaSemana;
  }
 
+ if((obj.getDay()==0||obj.getDay()==6) && ultimoDia!==d){
+   alert("⚠️ Data em fim de semana");
+ }
+ ultimoDia=d;
+
+ let numeroFormatado=String(numero.value||"").padStart(3,'0');
  let ano=d.substring(0,4);
  let dBR=d.split("-").reverse().join("/");
 
- let numeroFormatado=String(numero.value||"").padStart(3,'0');
-
- let caso=nome(casoInput.value||"");
- let credor=nome(credorInput.value||"");
+ let casoFormatado=nome(caso.value||"");
+ let credorFormatado=nome(credor.value||"");
 
  cpf.value=mascara(cpf.value);
  cpf2.value=mascara(cpf2.value);
 
  if(mesmo.value==="Sim"){
-   recebedor.value=credor;
+   recebedor.value=credorFormatado;
    cpf2.value=cpf.value;
  } else {
-   // só limpa se acabou de mudar
+   if(recebedor.value===credorFormatado) recebedor.value="";
+   if(cpf2.value===cpf.value) cpf2.value="";
  }
 
- let horario = hora.value && min.value ? `${hora.value}:${min.value}` : "";
+ let horario = (hora.value && min.value) ? `${hora.value}:${min.value}` : "";
 
- let assunto=`${ano}.${numeroFormatado} - ${caso} - ${dBR}`;
+ let assunto=`${ano}.${numeroFormatado} - ${casoFormatado} - ${dBR}`;
 
- let corpo=`Prezados, haverá uma cessão prevista para ${dia.value} dia ${dBR}.
+ let corpo=`Prezados, haverá uma cessão prevista para ${diaSemana} dia ${dBR}.
 Seguem os dados para que a programação seja realizada.
 
 
@@ -292,7 +261,7 @@ Dados para Organização
 
 Pagamento Credor
 
-1. O nome completo do credor do precatório: ${credor}
+1. O nome completo do credor do precatório: ${credorFormatado}
 2. CPF do credor do precatório: ${cpf.value}
 3. O que estamos pagando com a transação: ${tipo.value}
 4. Valor do Pgto: R$ ${valor(valorInput.value)}
@@ -309,48 +278,26 @@ Pagamento Credor
 15. Tipo da chave Pix: ${tipoPix.value}
 16. Tirou Print dos dados para conferência no email: ${print.value}`;
 
- assuntoDiv.innerText=assunto;
- corpoDiv.innerText=corpo;
+ assunto.innerText=assunto;
+ corpo.innerText=corpo;
 }
 
-function copiarAssunto(){navigator.clipboard.writeText(assuntoDiv.innerText);}
-function copiarCorpo(){navigator.clipboard.writeText(corpoDiv.innerText);}
+// COPIAR
+function copiarAssunto(){navigator.clipboard.writeText(assunto.innerText);}
+function copiarCorpo(){navigator.clipboard.writeText(corpo.innerText);}
 
+// EVENTOS
 document.querySelectorAll("input,select").forEach(e=>e.addEventListener("input",atualizar));
 
-let numero=document.getElementById("numero");
-let data=document.getElementById("data");
-let dia=document.getElementById("dia");
-let casoInput=document.getElementById("caso");
-let credorInput=document.getElementById("credor");
-let cpf=document.getElementById("cpf");
-let valorInput=document.getElementById("valor");
-let data2=document.getElementById("data2");
-let hora=document.getElementById("hora");
-let min=document.getElementById("min");
-let mesmo=document.getElementById("mesmo");
-let recebedor=document.getElementById("recebedor");
-let cpf2=document.getElementById("cpf2");
-let bancoCod=document.getElementById("bancoCod");
-let bancoNome=document.getElementById("bancoNome");
-let agencia=document.getElementById("agencia");
-let conta=document.getElementById("conta");
-let tipoConta=document.getElementById("tipoConta");
-let pix=document.getElementById("pix");
-let tipoPix=document.getElementById("tipoPix");
-let print=document.getElementById("print");
-let tipo=document.getElementById("tipo");
-let assuntoDiv=document.getElementById("assunto");
-let corpoDiv=document.getElementById("corpo");
+bancoCod.oninput=()=>{ if(bancos[bancoCod.value]) bancoNome.value=bancos[bancoCod.value]; };
 
+// INIT
 window.onload=()=>{
  let hoje=new Date().toISOString().split('T')[0];
  data.value=hoje;
  data2.value=hoje;
  atualizar();
 };
-
-bancoCod.oninput=()=>{ if(bancos[bancoCod.value]) bancoNome.value=bancos[bancoCod.value]; };
 
 </script>
 
