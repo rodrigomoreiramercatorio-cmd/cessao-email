@@ -8,7 +8,6 @@
 body {
   font-family: Arial;
   background: #f5f7fa;
-  margin: 0;
   padding: 20px;
 }
 
@@ -21,35 +20,29 @@ body {
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
-h2 {
-  text-align: center;
-}
+h2 { text-align: center; }
 
-.bloco {
-  margin-top: 25px;
-}
+.bloco { margin-top: 25px; }
 
-label {
-  font-weight: bold;
-}
+label { font-weight: bold; }
 
 input, select {
   width: 100%;
   padding: 10px;
   margin-top: 5px;
   margin-bottom: 15px;
-  border: 1px solid #ccc;
   border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
 button {
+  padding: 10px;
+  margin-top: 10px;
   width: 100%;
-  padding: 12px;
   background: #002060;
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 16px;
   cursor: pointer;
 }
 
@@ -57,8 +50,10 @@ button {
   background: #f1f1f1;
   padding: 15px;
   border-radius: 6px;
-  margin-top: 10px;
   white-space: pre-wrap;
+  font-family: Verdana, Arial;
+  font-size: 14px;
+  line-height: 1.5;
 }
 </style>
 </head>
@@ -67,31 +62,31 @@ button {
 
 <div class="container">
 
-<h2>Preenchimento - Cessão</h2>
+<h2>Cessão</h2>
 
 <div class="bloco">
 <h3>Dados da Cessão</h3>
 
-<label>Nº do Caso</label>
+<label>Nº Caso</label>
 <input id="numero" type="number">
 
 <label>Data da cessão</label>
 <input id="data" type="date">
 
 <label>Caso</label>
-<input id="caso" type="text">
+<input id="caso">
 </div>
 
 <div class="bloco">
 <h3>Credor</h3>
 
-<label>Nome do credor</label>
-<input id="credor" type="text">
+<label>Nome</label>
+<input id="credor">
 
-<label>CPF ou CNPJ</label>
-<input id="cpf" type="text">
+<label>CPF/CNPJ</label>
+<input id="cpf">
 
-<label>Tipo de pagamento</label>
+<label>Tipo</label>
 <select id="tipo">
 <option>Credor</option>
 <option>Honorário Contratual</option>
@@ -117,88 +112,152 @@ button {
 <input id="data2" type="date">
 
 <label>Horário</label>
-<input id="hora" type="text">
+<input id="hora">
+</div>
+
+<div class="bloco">
+<h3>Recebedor</h3>
+
+<label><input type="checkbox" id="mesmo"> Mesmo do credor</label>
+
+<label>Nome</label>
+<input id="recebedor">
+
+<label>CPF/CNPJ</label>
+<input id="cpf2">
+</div>
+
+<div class="bloco">
+<h3>Banco</h3>
+
+<input id="bancoCod" placeholder="Código">
+<input id="bancoNome" placeholder="Nome do banco">
+<input id="agencia" placeholder="Agência">
+<input id="conta" placeholder="Conta">
+<input id="tipoConta" placeholder="Tipo da conta">
+<input id="pix" placeholder="Chave Pix">
+
+<select id="tipoPix">
+<option>CPF/CNPJ</option>
+<option>Email</option>
+<option>Telefone</option>
+<option>Aleatória</option>
+</select>
+
+<select id="print">
+<option>Sim</option>
+<option>Não</option>
+</select>
 </div>
 
 <div class="bloco">
 <h3>Preview</h3>
 
-<h4>Assunto</h4>
-<div id="assunto" class="output"></div>
-
-<h4>Corpo do Email</h4>
+<div id="assunto" class="output"></div><br>
 <div id="corpo" class="output"></div>
 
-<button onclick="copiar()">Copiar tudo</button>
+<button onclick="copiarAssunto()">Copiar Assunto</button>
+<button onclick="copiarCorpo()">Copiar Corpo</button>
 </div>
 
 </div>
 
 <script>
-function formatarNome(nome) {
-  return nome
-    .toLowerCase()
-    .trim()
-    .split(" ")
-    .map(p => ["da","de","do","das","dos"].includes(p) ? p : p.charAt(0).toUpperCase() + p.slice(1))
-    .join(" ");
+function nome(n){
+ return n.toLowerCase().trim().split(" ")
+ .map(p=>["da","de","do","das","dos"].includes(p)?p:p[0]?.toUpperCase()+p.slice(1))
+ .join(" ");
 }
 
-function formatarValor(valor) {
-  let num = parseFloat(valor || 0);
-  return num.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+function valor(v){
+ return parseFloat(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
 }
 
-function atualizarPreview() {
-  let numero = String(document.getElementById("numero").value || "").padStart(3,'0');
-  let data = document.getElementById("data").value;
-
-  if (!data) return;
-
-  let caso = formatarNome(document.getElementById("caso").value || "");
-  let credor = formatarNome(document.getElementById("credor").value || "");
-  let cpf = document.getElementById("cpf").value || "";
-  let tipo = document.getElementById("tipo").value;
-  let valor = formatarValor(document.getElementById("valor").value);
-
-  let ano = data.substring(0,4);
-  let dataBR = data.split("-").reverse().join("/");
-
-  let emailReal = `${ano}.${numero}`;
-  let assunto = `${emailReal} - ${caso} - ${dataBR}`;
-
-  let corpo = `Prezados,
-
-Haverá uma cessão prevista na data ${dataBR}.
-Seguem os dados para programação.
-
-Tipo: ${tipo}
-
-Nome: ${credor}
-CPF/CNPJ: ${cpf}
-Valor: R$ ${valor}
-
-Favor anexar o print dos dados bancários para conferência.`;
-
-  document.getElementById("assunto").innerText = assunto;
-  document.getElementById("corpo").innerText = corpo;
+function diaSemana(data){
+ return new Date(data).toLocaleDateString('pt-BR',{weekday:'long'});
 }
 
-function copiar() {
-  let texto = document.getElementById("assunto").innerText + "\n\n" +
-              document.getElementById("corpo").innerText;
+function atualizar(){
+ let n = String(numero.value||"").padStart(3,'0');
+ let d = data.value;
+ if(!d) return;
 
-  navigator.clipboard.writeText(texto);
-  alert("Copiado!");
+ let ano = d.substring(0,4);
+ let dBR = d.split("-").reverse().join("/");
+ let dia = diaSemana(d);
+
+ let caso = nome(casoInput.value||"");
+ let credor = nome(credorInput.value||"");
+
+ if(mesmo.checked){
+   recebedor.value = credor;
+   cpf2.value = cpf.value;
+ }
+
+ let assunto = `${ano}.${n} - ${caso} - ${dBR}`;
+
+ let corpo = `Prezados, haverá uma cessão prevista para ${dia} dia ${dBR}.
+Seguem os dados para que a programação seja realizada.
+
+
+Dados para Organização
+
+
+Pagamento Credor
+
+1. O nome completo do credor do precatório: ${credor}
+2. CPF do credor do precatório: ${cpf.value}
+3. O que estamos pagando com a transação: ${tipo.value}
+4. Valor do Pgto: R$ ${valor(valorInput.value)}
+5. Data prevista de realização da cessão: ${data2.value.split("-").reverse().join("/")}
+6. Horário previsto de realização da cessão: ${hora.value}
+7. Nome Completo de quem receberá o valor: ${recebedor.value}
+8. CPF de quem receberá o valor: ${cpf2.value}
+9. Código do banco: ${bancoCod.value}
+10. Nome do Banco: ${bancoNome.value}
+11. Nº da Agência: ${agencia.value}
+12. Nº da Conta: ${conta.value}
+13. Tipo da Conta: ${tipoConta.value}
+14. Chave Pix: ${pix.value}
+15. Tipo da chave Pix: ${tipoPix.value}
+16. Tirou Print dos dados para conferência no email: ${print.value}`;
+
+ assuntoDiv.innerText = assunto;
+ corpoDiv.innerText = corpo;
 }
 
-document.addEventListener("input", atualizarPreview);
+function copiarAssunto(){navigator.clipboard.writeText(assuntoDiv.innerText);}
+function copiarCorpo(){navigator.clipboard.writeText(corpoDiv.innerText);}
 
-window.onload = function() {
-  let hoje = new Date().toISOString().split('T')[0];
-  document.getElementById("data").value = hoje;
-  document.getElementById("data2").value = hoje;
-  atualizarPreview();
+document.querySelectorAll("input,select").forEach(e=>e.addEventListener("input",atualizar));
+
+let numero=document.getElementById("numero");
+let data=document.getElementById("data");
+let casoInput=document.getElementById("caso");
+let credorInput=document.getElementById("credor");
+let cpf=document.getElementById("cpf");
+let valorInput=document.getElementById("valor");
+let data2=document.getElementById("data2");
+let hora=document.getElementById("hora");
+let mesmo=document.getElementById("mesmo");
+let recebedor=document.getElementById("recebedor");
+let cpf2=document.getElementById("cpf2");
+let bancoCod=document.getElementById("bancoCod");
+let bancoNome=document.getElementById("bancoNome");
+let agencia=document.getElementById("agencia");
+let conta=document.getElementById("conta");
+let tipoConta=document.getElementById("tipoConta");
+let pix=document.getElementById("pix");
+let tipoPix=document.getElementById("tipoPix");
+let print=document.getElementById("print");
+let assuntoDiv=document.getElementById("assunto");
+let corpoDiv=document.getElementById("corpo");
+
+window.onload=()=>{
+ let hoje=new Date().toISOString().split('T')[0];
+ data.value=hoje;
+ data2.value=hoje;
+ atualizar();
 };
 </script>
 
