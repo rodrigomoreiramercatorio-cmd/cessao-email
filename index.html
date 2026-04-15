@@ -93,7 +93,68 @@ function copiar() {
 }
 </script>
 <script>
-...código que te mandei...
+<script>
+function formatarNome(nome) {
+  return nome
+    .toLowerCase()
+    .trim()
+    .split(" ")
+    .map((palavra, i) => {
+      if (["da","de","do","das","dos"].includes(palavra)) return palavra;
+      return palavra.charAt(0).toUpperCase() + palavra.slice(1);
+    })
+    .join(" ");
+}
+
+function formatarValor(valor) {
+  let num = parseFloat(valor || 0);
+  return num.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+}
+
+function atualizarPreview() {
+  let numero = String(document.getElementById("numero").value || "").padStart(3,'0');
+  let data = document.getElementById("data").value;
+  let caso = formatarNome(document.getElementById("caso").value || "");
+  let credor = formatarNome(document.getElementById("credor").value || "");
+  let cpf = document.getElementById("cpf").value || "";
+  let valor = formatarValor(document.getElementById("valor").value);
+
+  if (!data) return;
+
+  let ano = data.substring(0,4);
+  let dataBR = data.split("-").reverse().join("/");
+
+  let emailReal = `${ano}.${numero}`;
+
+  let assunto = `${emailReal} - ${caso} - ${dataBR}`;
+
+  let corpo = `Prezados,
+
+Haverá uma cessão prevista na data ${dataBR}.
+Seguem os dados para programação.
+
+Pagamento Credor
+
+Nome: ${credor}
+CPF: ${cpf}
+Valor: R$ ${valor}
+
+Favor anexar o print dos dados bancários para conferência.`;
+
+  document.getElementById("assunto").innerText = assunto;
+  document.getElementById("corpo").innerText = corpo;
+}
+
+// Atualiza automaticamente ao digitar
+document.addEventListener("input", atualizarPreview);
+
+// Data de hoje automática
+window.onload = function() {
+  let hoje = new Date().toISOString().split('T')[0];
+  document.getElementById("data").value = hoje;
+  atualizarPreview();
+};
+</script>
 </script>
 
 </body>
